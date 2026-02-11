@@ -1,8 +1,8 @@
 {
   "name": "feed-service",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "Serviço de backend responsável pelo Feed e funcionalidades sociais da aplicação AC Acessórios.",
+  "author": "AC Acessórios",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {

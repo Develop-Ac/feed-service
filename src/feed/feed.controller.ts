@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Param, Body, Query, UseGuards, Req, UseInterceptors, UploadedFiles, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, Query, UseGuards, Req, UseInterceptors, UploadedFiles, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { FeedService } from './feed.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { AuthGuard } from '../auth/auth.guard';
@@ -12,8 +12,11 @@ export class FeedController {
     @UseGuards(AuthGuard)
     @UseInterceptors(FilesInterceptor('files'))
     create(@Body() createFeedDto: CreatePostDto, @Req() req, @UploadedFiles() files: Array<Express.Multer.File>) {
-        if (req.user?.setor?.toLowerCase() !== 'admin') {
-            // throw new UnauthorizedException('Somente admin pode postar no feed.');
+        const canPost = req.user?.setor?.toLowerCase() === 'admin' ||
+            req.user?.sis_permissoes?.some(p => p.tela === '/feed' && p.editar);
+
+        if (!canPost) {
+            throw new UnauthorizedException('Você não tem permissão para postar no feed.');
         }
         return this.feedService.create(createFeedDto, req.user.id, files);
     }
@@ -26,9 +29,18 @@ export class FeedController {
 
     @Delete(':id')
     @UseGuards(AuthGuard)
-    remove(@Param('id') id: string, @Req() req) {
-        if (req.user?.setor?.toLowerCase() !== 'admin') {
-            throw new UnauthorizedException('Somente admin pode excluir posts.');
+    async remove(@Param('id') id: string, @Req() req) {
+        const post = await this.feedService.findOne(id);
+        if (!post) {
+            throw new NotFoundException('Post não encontrado.');
+        }
+
+        const isAuthor = post.autor_id === req.user.id;
+        const canDelete = req.user?.setor?.toLowerCase() === 'admin' ||
+            req.user?.sis_permissoes?.some(p => p.tela === '/feed' && p.deletar);
+
+        if (!isAuthor && !canDelete) {
+            throw new UnauthorizedException('Você não tem permissão para excluir este post.');
         }
         return this.feedService.remove(id);
     }
@@ -54,7 +66,9 @@ export class FeedController {
     @Delete('comments/:id')
     @UseGuards(AuthGuard)
     removeComment(@Param('id') id: string, @Req() req) {
-        const isAdmin = req.user?.setor?.toLowerCase() === 'admin';
-        return this.feedService.removeComment(id, req.user.id, isAdmin);
+        const canDelete = req.user?.setor?.toLowerCase() === 'admin' ||
+            req.user?.sis_permissoes?.some(p => p.tela === '/feed' && p.deletar);
+
+        return this.feedService.removeComment(id, req.user.id, canDelete);
     }
 }

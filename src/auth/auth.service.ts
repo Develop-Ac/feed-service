@@ -11,6 +11,9 @@ export class AuthService {
 
         const user = await this.prisma.sis_usuarios.findUnique({
             where: { id: userId },
+            include: {
+                sis_permissoes: true
+            }
         });
 
         // Allow by code if needed? No, ID is safer.

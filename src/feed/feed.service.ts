@@ -132,6 +132,23 @@ export class FeedService {
         return result;
     }
 
+    async findOne(id: string) {
+        return this.prisma.fed_posts.findUnique({
+            where: { id },
+            include: {
+                autor: {
+                    select: {
+                        id: true,
+                        nome: true,
+                        setor: true,
+                        avatar_url: true,
+                    }
+                },
+                midias: true,
+            }
+        });
+    }
+
     async remove(id: string) {
         // 1. Get post with midia to delete files
         const post = await this.prisma.fed_posts.findUnique({

@@ -2,7 +2,9 @@ import { Controller, Get, Post, Delete, Param, Body, Query, UseGuards, Req, UseI
 import { FeedService } from './feed.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { AuthGuard } from '../auth/auth.guard';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FastifyFilesInterceptor } from '../common/multipart/fastify-multipart.interceptor';
+import type { ArquivoEnviado } from '../common/multipart/arquivo-enviado.interface';
+import type { FastifyRequest } from 'fastify';
 
 @Controller('feed')
 export class FeedController {
@@ -10,8 +12,8 @@ export class FeedController {
 
     @Post()
     @UseGuards(AuthGuard)
-    @UseInterceptors(FilesInterceptor('files'))
-    create(@Body() createFeedDto: CreatePostDto, @Req() req, @UploadedFiles() files: Array<Express.Multer.File>) {
+    @UseInterceptors(FastifyFilesInterceptor('files'))
+    create(@Body() createFeedDto: CreatePostDto, @Req() req: FastifyRequest, @UploadedFiles() files: ArquivoEnviado[] = []) {
         const canPost = req.user?.setor?.toLowerCase() === 'admin' ||
             req.user?.sis_permissoes?.some(p => p.tela === '/feed' && p.editar);
 
@@ -23,13 +25,13 @@ export class FeedController {
 
     @Get()
     @UseGuards(AuthGuard)
-    findAll(@Query('skip') skip = '0', @Query('take') take = '10', @Req() req) {
+    findAll(@Query('skip') skip = '0', @Query('take') take = '10', @Req() req: FastifyRequest) {
         return this.feedService.findAll(Number(skip), Number(take), req.user?.id);
     }
 
     @Delete(':id')
     @UseGuards(AuthGuard)
-    async remove(@Param('id') id: string, @Req() req) {
+    async remove(@Param('id') id: string, @Req() req: FastifyRequest) {
         const post = await this.feedService.findOne(id);
         if (!post) {
             throw new NotFoundException('Post não encontrado.');
@@ -47,7 +49,7 @@ export class FeedController {
 
     @Post(':id/like')
     @UseGuards(AuthGuard)
-    toggleLike(@Param('id') id: string, @Req() req) {
+    toggleLike(@Param('id') id: string, @Req() req: FastifyRequest) {
         return this.feedService.toggleLike(id, req.user.id);
     }
 
@@ -59,13 +61,13 @@ export class FeedController {
 
     @Post(':id/comments')
     @UseGuards(AuthGuard)
-    addComment(@Param('id') id: string, @Body() body: { conteudo: string }, @Req() req) {
+    addComment(@Param('id') id: string, @Body() body: { conteudo: string }, @Req() req: FastifyRequest) {
         return this.feedService.addComment(id, req.user.id, body.conteudo);
     }
 
     @Delete('comments/:id')
     @UseGuards(AuthGuard)
-    removeComment(@Param('id') id: string, @Req() req) {
+    removeComment(@Param('id') id: string, @Req() req: FastifyRequest) {
         const canDelete = req.user?.setor?.toLowerCase() === 'admin' ||
             req.user?.sis_permissoes?.some(p => p.tela === '/feed' && p.deletar);
 

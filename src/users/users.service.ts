@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { MinioService } from '../minio/minio.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import * as bcrypt from 'bcrypt';
+import type { ArquivoEnviado } from '../common/multipart/arquivo-enviado.interface';
 
 @Injectable()
 export class UsersService {
@@ -78,7 +79,7 @@ export class UsersService {
         });
     }
 
-    async uploadAvatar(userId: string, file: Express.Multer.File) {
+    async uploadAvatar(userId: string, file: ArquivoEnviado) {
         if (!file) {
             throw new BadRequestException('Arquivo não fornecido');
         }

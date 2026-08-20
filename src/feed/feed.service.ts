@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MinioService } from '../minio/minio.service';
 import { CreatePostDto } from './dto/create-post.dto';
+import type { ArquivoEnviado } from '../common/multipart/arquivo-enviado.interface';
 
 @Injectable()
 export class FeedService {
@@ -10,7 +11,7 @@ export class FeedService {
         private minio: MinioService,
     ) { }
 
-    async create(createPostDto: CreatePostDto, authorId: string, files: Express.Multer.File[] = []) {
+    async create(createPostDto: CreatePostDto, authorId: string, files: ArquivoEnviado[] = []) {
         // 1. Upload files
         const mediaEntries: any[] = [];
         for (const file of files) {

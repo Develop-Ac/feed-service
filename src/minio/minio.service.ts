@@ -11,6 +11,7 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { NodeHttpHandler } from '@smithy/node-http-handler';
 import * as https from 'https';
+import type { ArquivoEnviado } from '../common/multipart/arquivo-enviado.interface';
 
 type S3Opts = {
     endpoint: string;
@@ -141,7 +142,7 @@ export class MinioService {
         return await getSignedUrl(this.client, cmd, { expiresIn: expiresSeconds });
     }
 
-    async uploadFile(file: Express.Multer.File | { buffer: Buffer, originalname: string, mimetype: string }, prefix: string = ''): Promise<any> {
+    async uploadFile(file: ArquivoEnviado | { buffer: Buffer, originalname: string, mimetype: string }, prefix: string = ''): Promise<any> {
         const timestamp = Date.now();
         // Sanitize filename
         const safeName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');

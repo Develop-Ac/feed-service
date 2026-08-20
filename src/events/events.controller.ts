@@ -2,6 +2,7 @@ import { Controller, Get, Post, Delete, Param, Body, Req, UseGuards, Unauthorize
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { AuthGuard } from '../auth/auth.guard';
+import type { FastifyRequest } from 'fastify';
 
 @Controller('events')
 export class EventsController {
@@ -9,7 +10,7 @@ export class EventsController {
 
     @Post()
     @UseGuards(AuthGuard)
-    create(@Body() createEventDto: CreateEventDto, @Req() req) {
+    create(@Body() createEventDto: CreateEventDto, @Req() req: FastifyRequest) {
         if (req.user?.setor?.toLowerCase() !== 'admin') {
             throw new UnauthorizedException('Somente admin pode criar eventos.');
         }
@@ -24,7 +25,7 @@ export class EventsController {
 
     @Delete(':id')
     @UseGuards(AuthGuard)
-    remove(@Param('id') id: string, @Req() req) {
+    remove(@Param('id') id: string, @Req() req: FastifyRequest) {
         if (req.user?.setor?.toLowerCase() !== 'admin') {
             throw new UnauthorizedException('Somente admin pode excluir eventos.');
         }

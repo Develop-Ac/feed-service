@@ -9,7 +9,7 @@ O `feed-service` é um backend desenvolvido em **NestJS** responsável por geren
 - Upload de arquivos (Imagens/Anexos) via S3/MinIO.
 
 ## 2. Tecnologias Principais
-- **Framework**: NestJS (Express adapter).
+- **Framework**: NestJS (Fastify adapter).
 - **Banco de Dados**: PostgreSQL com **Prisma ORM**.
 - **Object Storage**: AWS S3 SDK (compatível com MinIO).
 - **Documentação**: Swagger (OpenAPI).

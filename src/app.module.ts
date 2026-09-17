@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -21,6 +23,10 @@ import { HolidaysModule } from './modules/holidays/holidays.module';
     AuthModule,
     UsersModule,
     HolidaysModule,
+
+    PrometheusModule.register({
+      defaultMetrics: { enabled: true }, // CPU, memória, event loop, GC
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],

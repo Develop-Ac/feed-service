@@ -2,7 +2,9 @@ import { Controller, Get, Patch, Post, Body, UseGuards, Request, UseInterceptors
 import { UsersService } from './users.service';
 import { AuthGuard } from '../auth/auth.guard'; // Assuming AuthGuard exists and works
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FastifyFileInterceptor } from '../common/multipart/fastify-multipart.interceptor';
+import type { ArquivoEnviado } from '../common/multipart/arquivo-enviado.interface';
+import type { FastifyRequest } from 'fastify';
 import { ApiBearerAuth, ApiTags, ApiConsumes, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('users')
@@ -13,18 +15,18 @@ export class UsersController {
     constructor(private readonly usersService: UsersService) { }
 
     @Get('me')
-    getProfile(@Request() req) {
+    getProfile(@Request() req: FastifyRequest) {
         // req.user is populated by AuthGuard
         return this.usersService.getProfile(req.user.id); // Assuming req.user has id
     }
 
     @Patch('me')
-    updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
+    updateProfile(@Request() req: FastifyRequest, @Body() updateProfileDto: UpdateProfileDto) {
         return this.usersService.updateProfile(req.user.id, updateProfileDto);
     }
 
     @Post('me/avatar')
-    @UseInterceptors(FileInterceptor('file', {
+    @UseInterceptors(FastifyFileInterceptor('file', {
         limits: {
             fileSize: 5 * 1024 * 1024, // 5MB
         }
@@ -41,7 +43,7 @@ export class UsersController {
             },
         },
     })
-    uploadAvatar(@Request() req, @UploadedFile() file: Express.Multer.File) {
+    uploadAvatar(@Request() req: FastifyRequest, @UploadedFile() file: ArquivoEnviado) {
         return this.usersService.uploadAvatar(req.user.id, file);
     }
 }

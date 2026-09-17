@@ -2,6 +2,7 @@ import { Controller, Get, Post, Delete, Param, Body, Query, UseGuards, Req, UseI
 import { FeedService } from './feed.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { AuthGuard } from '../auth/auth.guard';
+import { pode } from '../auth/pode';
 import { FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('feed')
@@ -12,10 +13,7 @@ export class FeedController {
     @UseGuards(AuthGuard)
     @UseInterceptors(FilesInterceptor('files'))
     create(@Body() createFeedDto: CreatePostDto, @Req() req, @UploadedFiles() files: Array<Express.Multer.File>) {
-        const canPost = req.user?.setor?.toLowerCase() === 'admin' ||
-            req.user?.sis_permissoes?.some(p => p.tela === '/feed' && p.editar);
-
-        if (!canPost) {
+        if (!pode(req.user, '/feed', 'editar')) {
             throw new UnauthorizedException('Você não tem permissão para postar no feed.');
         }
         return this.feedService.create(createFeedDto, req.user.id, files);
@@ -36,10 +34,7 @@ export class FeedController {
         }
 
         const isAuthor = post.autor_id === req.user.id;
-        const canDelete = req.user?.setor?.toLowerCase() === 'admin' ||
-            req.user?.sis_permissoes?.some(p => p.tela === '/feed' && p.deletar);
-
-        if (!isAuthor && !canDelete) {
+        if (!isAuthor && !pode(req.user, '/feed', 'deletar')) {
             throw new UnauthorizedException('Você não tem permissão para excluir este post.');
         }
         return this.feedService.remove(id);
@@ -66,9 +61,6 @@ export class FeedController {
     @Delete('comments/:id')
     @UseGuards(AuthGuard)
     removeComment(@Param('id') id: string, @Req() req) {
-        const canDelete = req.user?.setor?.toLowerCase() === 'admin' ||
-            req.user?.sis_permissoes?.some(p => p.tela === '/feed' && p.deletar);
-
-        return this.feedService.removeComment(id, req.user.id, canDelete);
+        return this.feedService.removeComment(id, req.user.id, pode(req.user, '/feed', 'deletar'));
     }
 }

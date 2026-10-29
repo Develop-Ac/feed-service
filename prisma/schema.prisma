@@ -676,6 +676,7 @@ model fed_midia {
   bucket    String   @default("feed")
   chave     String
   post_id   String?
+  ordem     Int      @default(0)
   
   post      fed_posts? @relation(fields: [post_id], references: [id], onDelete: Cascade)
 }

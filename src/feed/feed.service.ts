@@ -12,9 +12,9 @@ export class FeedService {
     ) { }
 
     async create(createPostDto: CreatePostDto, authorId: string, files: ArquivoEnviado[] = []) {
-        // 1. Upload files
+        // 1. Upload files — a posição no array (= ordem escolhida no front) vira `ordem`
         const mediaEntries: any[] = [];
-        for (const file of files) {
+        for (const [ordem, file] of files.entries()) {
             const upload = await this.minio.uploadFile(file, 'posts/');
             let type = 'documento';
             if (file.mimetype.startsWith('image/')) type = 'imagem';
@@ -25,6 +25,7 @@ export class FeedService {
                 bucket: upload.bucket,
                 chave: upload.key,
                 tipo: type,
+                ordem,
             });
         }
 
@@ -39,7 +40,7 @@ export class FeedService {
                 },
             },
             include: {
-                midias: true,
+                midias: { orderBy: { ordem: 'asc' } },
                 autor: {
                     select: {
                         id: true,
@@ -82,7 +83,7 @@ export class FeedService {
                         avatar_url: true,
                     }
                 },
-                midias: true,
+                midias: { orderBy: { ordem: 'asc' } },
                 comentarios: {
                     include: {
                         autor: { select: { id: true, nome: true, avatar_url: true } }
@@ -145,7 +146,7 @@ export class FeedService {
                         avatar_url: true,
                     }
                 },
-                midias: true,
+                midias: { orderBy: { ordem: 'asc' } },
             }
         });
     }

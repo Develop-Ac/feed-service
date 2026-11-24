@@ -7,13 +7,21 @@ import { FastifyFilesInterceptor } from '../common/multipart/fastify-multipart.i
 import type { ArquivoEnviado } from '../common/multipart/arquivo-enviado.interface';
 import type { FastifyRequest } from 'fastify';
 
+/**
+ * Tamanho máximo de cada anexo de uma publicação (foto, vídeo ou PDF).
+ * Sem este limite explícito vale o padrão do `@fastify/multipart`, de 1 MB,
+ * que barra até foto de celular. O arquivo fica inteiro em memória até ir
+ * para o MinIO, por isso o teto não é maior.
+ */
+const TAMANHO_MAXIMO_ANEXO = 50 * 1024 * 1024; // 50 MB
+
 @Controller('feed')
 export class FeedController {
     constructor(private readonly feedService: FeedService) { }
 
     @Post()
     @UseGuards(AuthGuard)
-    @UseInterceptors(FastifyFilesInterceptor('files'))
+    @UseInterceptors(FastifyFilesInterceptor('files', { limits: { fileSize: TAMANHO_MAXIMO_ANEXO } }))
     create(@Body() createFeedDto: CreatePostDto, @Req() req: FastifyRequest, @UploadedFiles() files: ArquivoEnviado[] = []) {
         if (!pode(req.user, '/feed', 'editar')) {
             throw new UnauthorizedException('Você não tem permissão para postar no feed.');
